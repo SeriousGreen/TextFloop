@@ -1,0 +1,12 @@
+body {
+  text-align: center;
+  background-color: gray;
+}
+
+canvas {
+  border: solid;
+}
+
+.info {
+  text-align: left;
+}
