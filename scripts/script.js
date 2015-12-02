@@ -27,6 +27,8 @@ var drawMe = function() {
   //window.addEventListener("keydown", doKeyDown);
   window.addEventListener("keydown", doKeyDownMessage);
 
+  //draw the background
+  drawBG();
   //post a welcome message
 
   //start a new round
@@ -37,6 +39,7 @@ var drawMe = function() {
 var move = function() {
   //clear the screen
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  drawBG();
 
   drawToFindBoxes();
 
@@ -99,7 +102,7 @@ var doKeyDown = function(event) { //backspace, remove last letter from guess
           if (boxes[j] == null) {
             boxes[j] = guess[i];
             guess[i] = null;
-            boxes[j].setDestination((50*j)+j + 175, 190);
+            boxes[j].setDestination((55*j)+j + 160 + 2.5, 190);
             break;
           }
         }
@@ -185,7 +188,7 @@ var doKeyDown = function(event) { //backspace, remove last letter from guess
     //update each letter with its new destination
     for (var i = 0; i < word.length; i++) {
       if (boxes[i] != null) {
-        boxes[i].setDestination((50*i)+i + 175, 190);
+        boxes[i].setDestination((55*i)+i + 160 + 2.5, 190);
       }
     }
   } else {
@@ -196,17 +199,13 @@ var doKeyDown = function(event) { //backspace, remove last letter from guess
           if (guess[j] == null) {
             guess[j] = boxes[i];
             boxes[i] = null;
-            guess[j].setDestination((50*j)+j + 175, 100);
+            guess[j].setDestination((55*j)+j + 160 + 2.5, 97.5);
             break;
           }
         }
         break;
       }
     }
-  }
-
-  if (leftToFind == 0) {
-    newRoundFoundAll();
   }
 }
 
@@ -232,10 +231,18 @@ function square(x, y, letter) {
 
   this.draw = function () {
     ctx.fillStyle = "blue";
-    ctx.fillRect(this.x, this.y, 50, 50);
+    //ctx.fillRect(this.x, this.y, 50, 50);
+    ctx.beginPath();
+    ctx.arc(this.x + 25,this.y + 25,25,0,2*Math.PI);
+    ctx.fill();
+
     ctx.font = "30px Arial";
     ctx.fillStyle = "white";
     ctx.fillText(this.letter, this.x + 10, this.y + 35);
+
+
+
+
   }
 
   this.update = function() {
@@ -317,7 +324,7 @@ function shuffle() {
   //update each letter with its new destination
   for (var i = 0; i < word.length; i++) {
     if (boxes[i] != null) {
-      boxes[i].setDestination((50*i)+i + 175, 190);
+      boxes[i].setDestination((50*i)+i + 160 + 2.5, 190);
     }
   }
 }
@@ -346,7 +353,7 @@ function handleHttpResponse() {
     console.log("new word:\n" + word);
     for (var i = 0; i < boxes.length; i++) {
       guess[i] = null;
-      boxes[i] = new square((50*i)+i + 175, 190, word[i]);
+      boxes[i] = new square((55*i)+i + 160 + 2.5, 190, word[i]);
     }
     //since the letters come from the server in alphabetical order, lefts shuffle them!
     //shuffle();
@@ -381,6 +388,29 @@ function handleHttpResponse() {
     console.log("words to match (" + solutionWords.length + "):\n" + msg);
     window.addEventListener("keydown", doKeyDown);
     interval = setInterval(move, 50);
+  }
+}
+
+var drawBG = function() {
+  //draw the blue background
+  ctx.fillStyle = "#02d8fd";
+  ctx.fillRect(0,0,500,400);
+
+  //draw the 6 letter boxes
+  ctx.lineWidth = "1";
+  for (var i = 0; i < 6; i++) {
+    ctx.beginPath();
+    ctx.strokeStyle = "black";
+    ctx.rect((55*i)+i + 160, 95, 55,55);
+    ctx.stroke();
+  }
+
+  //draw the letter placeholders
+  for (var i = 0; i < 6; i++) {
+    ctx.beginPath();
+    ctx.fillStyle = "yellow";
+    ctx.arc((55*i)+i + 160 + 25, 215,15,0,2*Math.PI);
+    ctx.fill();
   }
 }
 
@@ -438,15 +468,26 @@ var gameOver = function() {
   time = (1000 * 60 * 2);
   //post game over message:
   splashMessage("Game over!");
-
-  //getNewLetters();
 }
 
 var splashMessage = function(message) {
   window.addEventListener("keydown", doKeyDownMessage);
-  ctx.fillStyle = "blue";
-  ctx.fillRect(100,100,100,100);
+
+  //draw the message window's background
+  ctx.beginPath();
+  ctx.fillStyle = "#02d8fd";
+  ctx.fillRect(100,100,300,200);
+
+  //draw the message window's frame
+  ctx.beginPath();
+  ctx.strokeStyle = "white";
+  ctx.lineWidth="4";
+  ctx.rect(100,100,300,200);
+  ctx.stroke();
+
+  //write the message
   ctx.font = "18px Arial";
   ctx.fillStyle = "white";
-  ctx.fillText(message, 115,115);
+  ctx.fillText(message, 115,130);
+
 }
