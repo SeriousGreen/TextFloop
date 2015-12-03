@@ -2,9 +2,9 @@ var canvas;
 var ctx;
 var interval;
 
-
 var time = (1000 * 60 * 2);
 var score = 0;
+
 
 var boxes = new Array(null, null, null, null, null, null);
 var guess = new Array(null, null, null, null, null, null);
@@ -13,6 +13,9 @@ var word = ['', '', '', '', '', ''];
 
 var solutionWords = new Array(); //2d array, holds the words the user must find,
 //and a flag to indicate whether that word has been found or not
+var solutionWordObjects = new Array(); //new
+
+
 var leftToFind = 0;
 var foundSixLetterWord = false;
 
@@ -24,17 +27,23 @@ var drawMe = function() {
   ctx = document.getElementById('myCanvas').getContext('2d');
 
   //canvas.addEventListener("click", doMouseDown);
-  //window.addEventListener("keydown", doKeyDown);
   window.addEventListener("keydown", doKeyDownMessage);
 
   //draw the background
   drawBG();
-  //post a welcome message
 
-  //start a new round
+  //post a welcome message
   splashMessage("Welcome! Press any key to begin.");
 
 };
+
+//    ######## ####  ######  ##    ##  ######
+//       ##     ##  ##    ## ##   ##  ##    ##
+//       ##     ##  ##       ##  ##   ##
+//       ##     ##  ##       #####     ######
+//       ##     ##  ##       ##  ##         ##
+//       ##     ##  ##    ## ##   ##  ##    ##
+//       ##    ####  ######  ##    ##  ######
 
 var move = function() {
   //clear the screen
@@ -85,17 +94,24 @@ var move = function() {
   }
 }
 
-/*
-var doMouseDown = function(event) {
+//    ######## ##     ## ######## ##    ## ########  ######
+//    ##       ##     ## ##       ###   ##    ##    ##    ##
+//    ##       ##     ## ##       ####  ##    ##    ##
+//    ######   ##     ## ######   ## ## ##    ##     ######
+//    ##        ##   ##  ##       ##  ####    ##          ##
+//    ##         ## ##   ##       ##   ###    ##    ##    ##
+//    ########    ###    ######## ##    ##    ##     ######
+
+
+/*var doMouseDown = function(event) {
   var rect = canvas.getBoundingClientRect();
   var clickX = event.clientX - rect.left;
   var clickY = event.clientY - rect.top;
-}
-*/
+}*/
 
-var doKeyDown = function(event) { //backspace, remove last letter from guess
-  if (event.keyCode == 8) {       //and add it to the last open spot in the tray
-    event.preventDefault();
+var doKeyDown = function(event) {
+  if (event.keyCode == 8) {      //backspace, remove last letter from guess
+    event.preventDefault();      //and add it to the last open spot in the tray
     for (var i = guess.length; i >= 0; i--) {
       if (guess[i] != null) {
         for (var j = boxes.length - 1; j >= 0; j--) {
@@ -137,18 +153,23 @@ var doKeyDown = function(event) { //backspace, remove last letter from guess
           console.log("you have " + leftToFind + " words left to find.");
 
           //calculate score of the word
+          //scoring: 3 letter word: 90 points
+          //         4 letter word: 160
+          //         5 250
+          //         6 360
+
           switch(wordGuess.length) {
             case 3:
-              score += 3;
+              score += 90;
               break;
             case 4:
-              score += 4;
+              score += 160;
               break;
             case 5:
-              score += 5;
+              score += 250;
               break;
             case 6:
-              score += 6;
+              score += 360;
               console.log("You qualify for the next round!");
               foundSixLetterWord = true;
               break;
@@ -217,9 +238,15 @@ var doKeyDownMessage = function(event) {
   getNewLetters()
 }
 
-/**
-* Object
-**/
+//     #######  ########        ## ########  ######  ########  ######
+//    ##     ## ##     ##       ## ##       ##    ##    ##    ##    ##
+//    ##     ## ##     ##       ## ##       ##          ##    ##
+//    ##     ## ########        ## ######   ##          ##     ######
+//    ##     ## ##     ## ##    ## ##       ##          ##          ##
+//    ##     ## ##     ## ##    ## ##       ##    ##    ##    ##    ##
+//     #######  ########   ######  ########  ######     ##     ######
+
+
 function square(x, y, letter) {
   this.x = x;
   this.y = y;
@@ -286,6 +313,56 @@ function square(x, y, letter) {
   }
 }
 
+function matchWord(word, x, y) {
+  this.x = x;
+  this.y = y;
+  this.word = word;
+  this.found = false;
+
+  this.draw = function () {
+
+    /*
+    ctx.lineWidth="1";
+    //if this word has been found, write each letter...
+
+    ctx.fillStyle = "white";
+    ctx.fillRect((j*15) + 3, (i*20) + 3, 11, 15);
+    ctx.strokeStyle = "black";
+    ctx.strokeRect((j*15) + 3, (i*20) + 3, 11, 15); */
+
+    letters = word.split("");
+    ctx.fillStyle = "white";
+    ctx.strokeStyle = "black";
+    for (var i = 0; i < letters.length; i++) {
+      ctx.fillRect((i*15) + + 3 + this.x, this.y, 11, 15);
+      ctx.strokeRect((i*15) + 3 + this.x, this.y, 11, 15);
+      if (this.found) {
+        ctx.font = "bold 14px Courier";
+        ctx.fillStyle = "black";
+        ctx.fillText(letters[i].toUpperCase(), (i*15) + 4 + this.x, this.y + 15);
+      }
+
+
+
+    }
+
+  }
+
+  this.setFound = function() {
+    this.found = true;
+  }
+
+}
+
+
+//    ###    ##        ######    #######  ########  #### ######## ##     ## ##     ##  ######
+//   ## ##   ##       ##    ##  ##     ## ##     ##  ##     ##    ##     ## ###   ### ##    ##
+//  ##   ##  ##       ##        ##     ## ##     ##  ##     ##    ##     ## #### #### ##
+// ##     ## ##       ##   #### ##     ## ########   ##     ##    ######### ## ### ##  ######
+// ######### ##       ##    ##  ##     ## ##   ##    ##     ##    ##     ## ##     ##       ##
+// ##     ## ##       ##    ##  ##     ## ##    ##   ##     ##    ##     ## ##     ## ##    ##
+// ##     ## ########  ######    #######  ##     ## ####    ##    ##     ## ##     ##  ######
+
 function shuffle() {
   var emptySpots;
   //first, move empty spaces to the end
@@ -324,10 +401,18 @@ function shuffle() {
   //update each letter with its new destination
   for (var i = 0; i < word.length; i++) {
     if (boxes[i] != null) {
-      boxes[i].setDestination((50*i)+i + 160 + 2.5, 190);
+      boxes[i].setDestination((55*i)+i + 160 + 2.5, 190);
     }
   }
 }
+
+// ##    ## ######## ######## ##      ##  #######  ########  ##    ## #### ##    ##  ######
+// ###   ## ##          ##    ##  ##  ## ##     ## ##     ## ##   ##   ##  ###   ## ##    ##
+// ####  ## ##          ##    ##  ##  ## ##     ## ##     ## ##  ##    ##  ####  ## ##
+// ## ## ## ######      ##    ##  ##  ## ##     ## ########  #####     ##  ## ## ## ##   ####
+// ##  #### ##          ##    ##  ##  ## ##     ## ##   ##   ##  ##    ##  ##  #### ##    ##
+// ##   ### ##          ##    ##  ##  ## ##     ## ##    ##  ##   ##   ##  ##   ### ##    ##
+// ##    ## ########    ##     ###  ###   #######  ##     ## ##    ## #### ##    ##  ######
 
 var ajax = new XMLHttpRequest(); // We create the HTTP Object
 
@@ -356,7 +441,7 @@ function handleHttpResponse() {
       boxes[i] = new square((55*i)+i + 160 + 2.5, 190, word[i]);
     }
     //since the letters come from the server in alphabetical order, lefts shuffle them!
-    //shuffle();
+    //shuffle(); //this caused some issues, so I'll do it later
 
     //clear the solution words array before adding the new words to it
     solutionWords = [];
@@ -364,9 +449,9 @@ function handleHttpResponse() {
     for (var i = 1; i < wordsArray.length; i++)
     {
       solutionWords.push([wordsArray[i],false]);
+
     }
     leftToFind = solutionWords.length;
-
 
     solutionWords.sort(function(a,b){
       if (a[0].length == b[0].length) {
@@ -380,21 +465,125 @@ function handleHttpResponse() {
       }
     });
 
-    //for testing, prints the words to find
+
     var msg = "";
+    /*
+    //for testing, prints the words to find
+
+    var threeLetterWords = 0;
+    var fourLetterWords = 0;
+    var fiveLetterWords = 0;
+    var sixLetterWords = 0;
+    */
     for (var i = 0; i < solutionWords.length; i++) {
       msg += solutionWords[i][0] + ", ";
+      /*console.log("word:" + solutionWords[i][0] + " letters: " + solutionWords[i][0].length);
+      switch (solutionWords[i][0].length) {
+        case 3:
+            threeLetterWords ++;
+            break;
+        case 4:
+            fourLetterWords ++;
+            break;
+        case 5:
+            fiveLetterWords ++;
+            break;
+        case 6:
+            sixLetterWords ++;
+            break;
+      }*/
     }
     console.log("words to match (" + solutionWords.length + "):\n" + msg);
+
+    if (solutionWords.length > 20) {
+      console.log("overlap required");
+      //if (())
+    }
+
+
+
     window.addEventListener("keydown", doKeyDown);
     interval = setInterval(move, 50);
   }
+}
+
+// ######## ##    ## ########      #######  ########    ########   #######  ##     ## ##    ## ########
+// ##       ###   ## ##     ##    ##     ## ##          ##     ## ##     ## ##     ## ###   ## ##     ##
+// ##       ####  ## ##     ##    ##     ## ##          ##     ## ##     ## ##     ## ####  ## ##     ##
+// ######   ## ## ## ##     ##    ##     ## ######      ########  ##     ## ##     ## ## ## ## ##     ##
+// ##       ##  #### ##     ##    ##     ## ##          ##   ##   ##     ## ##     ## ##  #### ##     ##
+// ##       ##   ### ##     ##    ##     ## ##          ##    ##  ##     ## ##     ## ##   ### ##     ##
+// ######## ##    ## ########      #######  ##          ##     ##  #######   #######  ##    ## ########
+
+var newRound = function() {
+  window.removeEventListener("keydown", doKeyDown);
+  clearInterval(interval);
+  foundSixLetterWord = false;
+  time = (1000 * 60 * 2);
+  //post new round message:
+  splashMessage("New Round!");
+  //getNewLetters();
+}
+
+var newRoundFoundAll = function() {
+  window.removeEventListener("keydown", doKeyDown);
+  clearInterval(interval);
+  foundSixLetterWord = false;
+  time = (1000 * 60 * 2);
+  //post new round message:
+  splashMessage("You found every word!\n Grats!");
+}
+
+var gameOver = function() {
+  window.removeEventListener("keydown", doKeyDown);
+  clearInterval(interval);
+  score = 0;
+  foundSixLetterWord = false;
+  time = (1000 * 60 * 2);
+  //post game over message:
+  splashMessage("Game over!");
+}
+
+//     ######   ########     ###    ########  ##     ## ####  ######   ######
+//    ##    ##  ##     ##   ## ##   ##     ## ##     ##  ##  ##    ## ##    ##
+//    ##        ##     ##  ##   ##  ##     ## ##     ##  ##  ##       ##
+//    ##   #### ########  ##     ## ########  #########  ##  ##        ######
+//    ##    ##  ##   ##   ######### ##        ##     ##  ##  ##             ##
+//    ##    ##  ##    ##  ##     ## ##        ##     ##  ##  ##    ## ##    ##
+//     ######   ##     ## ##     ## ##        ##     ## ####  ######   ######
+
+var splashMessage = function(message) {
+  window.addEventListener("keydown", doKeyDownMessage);
+
+  //draw the message window's background
+  ctx.beginPath();
+  ctx.fillStyle = "#02d8fd";
+  ctx.fillRect(100,100,300,200);
+
+  //draw the message window's frame
+  ctx.beginPath();
+  ctx.strokeStyle = "white";
+  ctx.lineWidth="4";
+  ctx.rect(100,100,300,200);
+  ctx.stroke();
+
+  //write the message
+  ctx.font = "18px Arial";
+  ctx.fillStyle = "white";
+  ctx.fillText(message, 115,130);
+
 }
 
 var drawBG = function() {
   //draw the blue background
   ctx.fillStyle = "#02d8fd";
   ctx.fillRect(0,0,500,400);
+
+  //draw the logo
+  ctx.font = "32px Arial";
+  ctx.fillStyle = "white";
+  ctx.fillText("Text", 350,30);
+  ctx.fillText("Floop", 370,70);
 
   //draw the 6 letter boxes
   ctx.lineWidth = "1";
@@ -439,55 +628,4 @@ var drawToFindBoxes = function() {
 
     }
   }
-}
-
-var newRound = function() {
-  window.removeEventListener("keydown", doKeyDown);
-  clearInterval(interval);
-  foundSixLetterWord = false;
-  time = (1000 * 60 * 2);
-  //post new round message:
-  splashMessage("New Round!");
-  //getNewLetters();
-}
-
-var newRoundFoundAll = function() {
-  window.removeEventListener("keydown", doKeyDown);
-  clearInterval(interval);
-  foundSixLetterWord = false;
-  time = (1000 * 60 * 2);
-  //post new round message:
-  splashMessage("You found every word!\n Grats!");
-}
-
-var gameOver = function() {
-  window.removeEventListener("keydown", doKeyDown);
-  clearInterval(interval);
-  score = 0;
-  foundSixLetterWord = false;
-  time = (1000 * 60 * 2);
-  //post game over message:
-  splashMessage("Game over!");
-}
-
-var splashMessage = function(message) {
-  window.addEventListener("keydown", doKeyDownMessage);
-
-  //draw the message window's background
-  ctx.beginPath();
-  ctx.fillStyle = "#02d8fd";
-  ctx.fillRect(100,100,300,200);
-
-  //draw the message window's frame
-  ctx.beginPath();
-  ctx.strokeStyle = "white";
-  ctx.lineWidth="4";
-  ctx.rect(100,100,300,200);
-  ctx.stroke();
-
-  //write the message
-  ctx.font = "18px Arial";
-  ctx.fillStyle = "white";
-  ctx.fillText(message, 115,130);
-
 }
