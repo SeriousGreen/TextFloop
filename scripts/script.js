@@ -257,19 +257,32 @@ function square(x, y, letter) {
   this.letter = letter;
 
   this.draw = function () {
-    ctx.fillStyle = "blue";
-    //ctx.fillRect(this.x, this.y, 50, 50);
+    /*
+    var c = document.getElementById("myCanvas");
+    var ctx = c.getContext("2d");
+    //ctx.fillStyle = "blue";
+    //ctx.fillRect(0,0,300,150);
+    var grd = ctx.createRadialGradient(95, 95, 4, 95, 95, 25);
+    grd.addColorStop(0, "white");
+    grd.addColorStop(1, "#8c8c8c");
+    ctx.fillStyle = grd;
+    ctx.arc(100,100,25,0,2*Math.PI);
+    ctx.fill();*/
+
+    grd = ctx.createRadialGradient(this.x + 18, this.y + 18, 4, this.x + 18, this.y + 18, 35);
+    grd.addColorStop(0, "white");
+    grd.addColorStop(1, "#8c8c8c");
+    ctx.fillStyle = grd;
+
+
+    //ctx.fillStyle = "white";
     ctx.beginPath();
     ctx.arc(this.x + 25,this.y + 25,25,0,2*Math.PI);
     ctx.fill();
 
-    ctx.font = "30px Arial";
-    ctx.fillStyle = "white";
-    ctx.fillText(this.letter, this.x + 10, this.y + 35);
-
-
-
-
+    ctx.font = "bold 38px Consolas";
+    ctx.fillStyle = "#00769d";
+    ctx.fillText(this.letter, this.x + 14, this.y + 37);
   }
 
   this.update = function() {
@@ -320,16 +333,6 @@ function matchWord(word, x, y) {
   this.found = false;
 
   this.draw = function () {
-
-    /*
-    ctx.lineWidth="1";
-    //if this word has been found, write each letter...
-
-    ctx.fillStyle = "white";
-    ctx.fillRect((j*15) + 3, (i*20) + 3, 11, 15);
-    ctx.strokeStyle = "black";
-    ctx.strokeRect((j*15) + 3, (i*20) + 3, 11, 15); */
-
     letters = word.split("");
     ctx.fillStyle = "white";
     ctx.strokeStyle = "black";
@@ -467,18 +470,18 @@ function handleHttpResponse() {
 
 
     var msg = "";
-    /*
+
     //for testing, prints the words to find
 
     var threeLetterWords = 0;
     var fourLetterWords = 0;
     var fiveLetterWords = 0;
     var sixLetterWords = 0;
-    */
+
     for (var i = 0; i < solutionWords.length; i++) {
       msg += solutionWords[i][0] + ", ";
-      /*console.log("word:" + solutionWords[i][0] + " letters: " + solutionWords[i][0].length);
-      switch (solutionWords[i][0].length) {
+      //console.log("word:" + solutionWords[i][0] + " letters: " + solutionWords[i][0].length);
+      /*switch (solutionWords[i][0].length) {
         case 3:
             threeLetterWords ++;
             break;
@@ -494,11 +497,18 @@ function handleHttpResponse() {
       }*/
     }
     console.log("words to match (" + solutionWords.length + "):\n" + msg);
+    /*console.log("3: " + threeLetterWords);
+    console.log("4: " + fourLetterWords);
+    console.log("5: " + fiveLetterWords);
+    console.log("6: " + sixLetterWords);
 
     if (solutionWords.length > 20) {
       console.log("overlap required");
-      //if (())
-    }
+      if ((solutionWords.length - Math.floor(threeLetterWords / 2) <= 20)) {
+        //only threes needed
+        console.log("threes!");
+      }
+    }*/
 
 
 
