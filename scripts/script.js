@@ -50,7 +50,11 @@ var move = function() {
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   drawBG();
 
-  drawToFindBoxes();
+  //drawToFindBoxes();
+  //console.log("object array length: " + solutionWordObjects.length);
+  for (var i = 0;i < solutionWordObjects.length; i++) {
+    solutionWordObjects[i].draw();
+  }
 
   //draw the timer
   ctx.font = "20px Arial";
@@ -329,11 +333,12 @@ function square(x, y, letter) {
 function matchWord(word, x, y) {
   this.x = x;
   this.y = y;
-  this.word = word;
+  this.word = word + "";
   this.found = false;
 
   this.draw = function () {
-    letters = word.split("");
+    letters = this.word.split("");
+    ctx.beginPath();
     ctx.fillStyle = "white";
     ctx.strokeStyle = "black";
     for (var i = 0; i < letters.length; i++) {
@@ -343,6 +348,8 @@ function matchWord(word, x, y) {
         ctx.font = "bold 14px Courier";
         ctx.fillStyle = "black";
         ctx.fillText(letters[i].toUpperCase(), (i*15) + 4 + this.x, this.y + 15);
+        ctx.stroke();
+        ctx.fillStyle = "white";
       }
 
 
@@ -478,10 +485,18 @@ function handleHttpResponse() {
     var fiveLetterWords = 0;
     var sixLetterWords = 0;
 
+    var threesToDouble = 0;
+    var foursToDouble = 0;
+    var fivesToDouble = 0;
+
+    var threesHeight;
+    var foursHeight;
+    var fivesHeight;
+
     for (var i = 0; i < solutionWords.length; i++) {
       msg += solutionWords[i][0] + ", ";
       //console.log("word:" + solutionWords[i][0] + " letters: " + solutionWords[i][0].length);
-      /*switch (solutionWords[i][0].length) {
+      switch (solutionWords[i][0].length) {
         case 3:
             threeLetterWords ++;
             break;
@@ -494,21 +509,80 @@ function handleHttpResponse() {
         case 6:
             sixLetterWords ++;
             break;
-      }*/
+      }
     }
+
+    threesHeight = threeLetterWords
+    foursHeight =  fourLetterWords;
+    fivesHeight = fiveLetterWords;
+
     console.log("words to match (" + solutionWords.length + "):\n" + msg);
-    /*console.log("3: " + threeLetterWords);
+    console.log("3: " + threeLetterWords);
     console.log("4: " + fourLetterWords);
     console.log("5: " + fiveLetterWords);
     console.log("6: " + sixLetterWords);
-
     if (solutionWords.length > 20) {
       console.log("overlap required");
-      if ((solutionWords.length - Math.floor(threeLetterWords / 2) <= 20)) {
+      if (solutionWords.length - Math.floor(threeLetterWords / 2) <= 20) {
         //only threes needed
-        console.log("threes!");
+        threesToDouble = solutionWords.length - 20;
+        threesHeight = threeLetterWords - threesToDouble;
+        console.log("threes only! doubleup: " + threesToDouble + " 3s height: " + threesHeight);
+        console.log("rows to print: " + solutionWords.length - Math.floor(threeLetterWords / 2));
+
+      } else if (solutionWords.length - (Math.floor(threeLetterWords / 2)) - (Math.floor(fourLetterWords / 2)) <= 20) {
+        //3's and 4's needed
+        threesToDouble = Math.floor(threeLetterWords / 2);
+        threesHeight = threeLetterWords - threesToDouble;
+        foursToDouble = solutionWords.length - threesToDouble - 20;
+        foursHeight = fourLetterWords - foursToDouble;
+        console.log("fours! " + threesToDouble + " threes and " + foursToDouble + " fours");
+        console.log(solutionWords.length - (Math.floor(threeLetterWords / 2)) - (Math.floor(fourLetterWords / 2)));
+      } else if (solutionWords.length - (Math.floor(threeLetterWords / 2)) - (Math.floor(fourLetterWords / 2)) - (Math.floor(fiveLetterWords / 2)) <=20) {
+        threesToDouble = Math.floor(threeLetterWords / 2);
+        threesHeight = threeLetterWords - threesToDouble;
+
+        foursToDouble = Math.floor(fourLetterWords / 2);
+        foursHeight = fourLetterWords - foursToDouble;
+
+        fivesToDouble = solutionWords.length - (Math.floor(threeLetterWords / 2)) - (Math.floor(fourLetterWords / 2)) - 20;
+        fivesHeight = fiveLetterWords - fivesToDouble;
+        console.log("fives!" + threesToDouble + " threes, " + foursToDouble + " fours," + fivesToDouble);
+        console.log(solutionWords.length - (Math.floor(threeLetterWords / 2)) - (Math.floor(fourLetterWords / 2)) - (Math.floor(fiveLetterWords / 2)));
+      } else {
+        console.log("overflow problem! (need to double 6's)");
       }
-    }*/
+    }
+
+
+
+    solutionWordObjects = [];
+
+    //matchWord(word, x, y)
+    for (var i = 0; i < solutionWords.length; i++) {
+      if (i < threeLetterWords) {
+        console.log("logging 3s");
+        var x = 3 + ((Math.floor(i / (threesHeight)) * 15)* 4);
+        var y = 3 + (((i % (threesHeight))) * 20);
+        solutionWordObjects.push(new matchWord(solutionWords[i][0], x, y));
+      } else if (i - threeLetterWords < fourLetterWords) {
+        console.log("logging 4s");
+        var x = 3 + ((Math.floor((i- threeLetterWords)/ (foursHeight)) * 15)* 5);
+        //var y = 3 + ((((i - threesToDouble) % (foursHeight + threesHeight) * 20);
+        var y = 3 + ((((i - threeLetterWords) % foursHeight) + threesHeight) * 20);
+        solutionWordObjects.push(new matchWord(solutionWords[i][0], x, y));
+      } else if (i - threeLetterWords - fourLetterWords < fiveLetterWords) {
+        console.log("logging 5s");
+        var x = 3 + ((Math.floor((i - threeLetterWords - fourLetterWords) / (fiveLetterWords - fivesToDouble)) * 15)* 6);
+        var y = 3 + ((((i - threeLetterWords - fourLetterWords) % fivesHeight) + threesHeight + foursHeight) * 20);
+        solutionWordObjects.push(new matchWord(solutionWords[i][0], x, y));
+      } else {
+        console.log("logging 6s");
+        var x = 3;
+        var y = 3 + ((i - threesToDouble - foursToDouble - fivesToDouble) * 20);
+        solutionWordObjects.push(new matchWord(solutionWords[i][0], x, y));
+      }
+    }
 
 
 
