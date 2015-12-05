@@ -2,7 +2,8 @@ var canvas;
 var ctx;
 var interval;
 
-var time = (1000 * 60 * 2);
+var TIME_LIMIT = 60 * 2 * 20;
+var time = TIME_LIMIT;
 var score = 0;
 
 
@@ -60,8 +61,8 @@ var move = function() {
   ctx.font = "20px Arial";
   ctx.fillStyle = "black";
   ctx.fillText("Time:", 170, 350);
-  ctx.fillText(time, 175, 375);
-  time -= 50;
+  ctx.fillText(Math.floor(time/1200) + ":" + Math.floor(time/40) % 60, 175,375);
+  time -= 1;
 
   //draw the score
   ctx.fillText("Score:", 170, 300);
@@ -148,10 +149,11 @@ var doKeyDown = function(event) {
     console.log("guess: " + wordGuess);
 
     var found = false;
-    for (var i = 0; i < solutionWords.length; i++) {
-      if (wordGuess.toLowerCase() == solutionWords[i][0]) {
+    for (var i = 0; i < solutionWordObjects.length; i++) {
+      if (wordGuess.toLowerCase() == solutionWordObjects[i].word) {
         //we found the word, now decide if it's been found already
-        if (solutionWords[i][1] == false) {
+        //if (solutionWords[i][1] == false) {
+        if (solutionWordObjects[i].found == false) {
           console.log("match!");
           leftToFind -= 1;
           console.log("you have " + leftToFind + " words left to find.");
@@ -181,7 +183,7 @@ var doKeyDown = function(event) {
 
 
           //set the found flags to true
-          solutionWords[i][1] = true;
+          solutionWordObjects[i].found = true;
           found = true;
           break;
         } else {
@@ -342,12 +344,12 @@ function matchWord(word, x, y) {
     ctx.fillStyle = "white";
     ctx.strokeStyle = "black";
     for (var i = 0; i < letters.length; i++) {
-      ctx.fillRect((i*15) + + 3 + this.x, this.y, 11, 15);
-      ctx.strokeRect((i*15) + 3 + this.x, this.y, 11, 15);
+      ctx.fillRect((i*15) + this.x, this.y, 11, 15);
+      ctx.strokeRect((i*15) + this.x, this.y, 11, 15);
       if (this.found) {
         ctx.font = "bold 14px Courier";
         ctx.fillStyle = "black";
-        ctx.fillText(letters[i].toUpperCase(), (i*15) + 4 + this.x, this.y + 15);
+        ctx.fillText(letters[i].toUpperCase(), (i*15) + 1 + this.x, this.y + 12);
         ctx.stroke();
         ctx.fillStyle = "white";
       }
@@ -603,7 +605,7 @@ var newRound = function() {
   window.removeEventListener("keydown", doKeyDown);
   clearInterval(interval);
   foundSixLetterWord = false;
-  time = (1000 * 60 * 2);
+  time = TIME_LIMIT;
   //post new round message:
   splashMessage("New Round!");
   //getNewLetters();
@@ -613,7 +615,7 @@ var newRoundFoundAll = function() {
   window.removeEventListener("keydown", doKeyDown);
   clearInterval(interval);
   foundSixLetterWord = false;
-  time = (1000 * 60 * 2);
+  time = TIME_LIMIT;
   //post new round message:
   splashMessage("You found every word!\n Grats!");
 }
@@ -623,7 +625,7 @@ var gameOver = function() {
   clearInterval(interval);
   score = 0;
   foundSixLetterWord = false;
-  time = (1000 * 60 * 2);
+  time = TIME_LIMIT;
   //post game over message:
   splashMessage("Game over!");
 }
