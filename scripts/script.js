@@ -61,7 +61,7 @@ var move = function() {
   ctx.font = "20px Arial";
   ctx.fillStyle = "black";
   ctx.fillText("Time:", 170, 350);
-  ctx.fillText(Math.floor(time/1200) + ":" + Math.floor(time/40) % 60, 175,375);
+  ctx.fillText(formatTime(Math.floor(time/1200)) + ":" + formatTime(Math.floor(time/20) % 60), 175,375);
   time -= 1;
 
   //draw the score
@@ -416,6 +416,10 @@ function shuffle() {
       boxes[i].setDestination((55*i)+i + 160 + 2.5, 190);
     }
   }
+}
+
+function formatTime(x) {
+  return (x < 10? "0" + x: x);
 }
 
 // ##    ## ######## ######## ##      ##  #######  ########  ##    ## #### ##    ##  ######
