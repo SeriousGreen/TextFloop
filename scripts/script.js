@@ -3,8 +3,11 @@ var ctx;
 var interval;
 
 var TIME_LIMIT = 60 * 2 * 20;
+
 var time = TIME_LIMIT;
 var score = 0;
+
+var messageBoxText = null;
 
 
 var boxes = new Array(null, null, null, null, null, null);
@@ -26,6 +29,7 @@ var drawMe = function() {
   canvas = document.getElementById('myCanvas');
   canvas.tabIndex = 1; //needed to intercept spacebar/backspace key defaults
   ctx = document.getElementById('myCanvas').getContext('2d');
+  ctx.translate(0.5, 0.5);
 
   //canvas.addEventListener("click", doMouseDown);
   window.addEventListener("keydown", doKeyDownMessage);
@@ -50,9 +54,8 @@ var move = function() {
   //clear the screen
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   drawBG();
+  drawMessageBox();
 
-  //drawToFindBoxes();
-  //console.log("object array length: " + solutionWordObjects.length);
   for (var i = 0;i < solutionWordObjects.length; i++) {
     solutionWordObjects[i].draw();
   }
@@ -84,7 +87,7 @@ var move = function() {
   //find out if the round has ended:
   if (leftToFind == 0) {
     //you've found all the words, begin a new round
-    newRound();
+    newRoundFoundAll();
     return;
   } else if (time <= 0) {
     if (foundSixLetterWord) {
@@ -115,6 +118,7 @@ var move = function() {
 }*/
 
 var doKeyDown = function(event) {
+  messageBoxText = null;
   if (event.keyCode == 8) {      //backspace, remove last letter from guess
     event.preventDefault();      //and add it to the last open spot in the tray
     for (var i = guess.length; i >= 0; i--) {
@@ -135,8 +139,14 @@ var doKeyDown = function(event) {
     shuffle();
   } else if (event.keyCode == 13) { //enter key, check for word match and return guess to tray
     event.preventDefault();
-    //check for match
 
+    //if the guess array is empty, skip everything and return.
+    if (guess[0] == null) {
+      return;
+    }
+
+
+    //check for match
     //build the word based on the letters in the top shelf
     var wordGuess = "";
     for (var i = 0; i < guess.length; i++) {
@@ -146,7 +156,6 @@ var doKeyDown = function(event) {
         wordGuess += guess[i].letter;
       }
     }
-    console.log("guess: " + wordGuess);
 
     var found = false;
     for (var i = 0; i < solutionWordObjects.length; i++) {
@@ -156,7 +165,6 @@ var doKeyDown = function(event) {
         if (solutionWordObjects[i].found == false) {
           console.log("match!");
           leftToFind -= 1;
-          console.log("you have " + leftToFind + " words left to find.");
 
           //calculate score of the word
           //scoring: 3 letter word: 90 points
@@ -176,7 +184,7 @@ var doKeyDown = function(event) {
               break;
             case 6:
               score += 360;
-              console.log("You qualify for the next round!");
+              messageBoxText = "You got the /six letter word./You qualify for the/next round!"
               foundSixLetterWord = true;
               break;
           }
@@ -187,7 +195,7 @@ var doKeyDown = function(event) {
           found = true;
           break;
         } else {
-          console.log("You already found this word!");
+          messageBoxText = "You already found/that word."
           found = true;
           break;
         }
@@ -195,7 +203,7 @@ var doKeyDown = function(event) {
     }
 
     if (! found) {
-      console.log("not a word");
+      messageBoxText = "Sorry, that's not/one of the/listed words.";
     }
 
     //return letters to tray
@@ -292,11 +300,33 @@ function square(x, y, letter) {
   }
 
   this.update = function() {
-    if ((this.x == this.destX) && (this.y == this.destY)) {
-      //do nothing
+
+    //if velocity is 0, don't do anything.
+    //console.log("velX: " + this.velocityX + " velY:" + this.velocityY);
+    if (this.velocityX == 0 && this.velocityY == 0) {
+      return;
+    }
+
+    this.x = Math.round( (this.x + this.velocityX) * 10) / 10;
+    this.y = Math.round( (this.y + this.velocityY) * 10) / 10;
+    //this.x = this.x + this.velocityX;
+    //this.y = this.y + this.velocityY;
+    //console.log("after round: " + this.x + ", " + this.y);
+
+    //check to see if x and y have reached/passed their destinations...
+    var xSet = ( (this.velocityX > 0 && this.x >= this.destX) || (this.velocityX < 0 && this.x <= this.destX) || this.velocityX == 0);
+    var ySet = ( (this.velocityY > 0 && this.y >= this.destY) || (this.velocityY < 0 && this.y <= this.destY) || this.velocityY == 0);
+    //... if so, set location to destination and reset velocity to 0
+    //console.log("xSet: " + xSet + " ySet: " + ySet);
+    if (xSet && ySet) {
+      //console.log("IF: x: " + this.x + " y: " + this.y + "\ndestX: " + this.destX + " destY: " + this.destY + " velX: " + this.velocityX + " velY:" + this.velocityY);
+      this.x = this.destX;
+      this.y = this.destY;
+
+      this.velocityX = 0;
+      this.velocityY = 0;
     } else {
-      this.x = this.x + this.velocityX;
-      this.y = this.y + this.velocityY;
+      //console.log(">>" + this.letter + "<< x: " + this.x + " y: " + this.y + "\ndestX: " + this.destX + " destY: " + this.destY + " velX: " + this.velocityX + " velY:" + this.velocityY);
     }
   }
 
@@ -321,14 +351,29 @@ function square(x, y, letter) {
     this.destX = x;
     this.destY = y;
 
+
+
     //do some math to calculate the new X and Y velocities
     var deltaX = this.destX - this.x;
     var deltaY = this.destY - this.y;
 
-    this.velocityX = deltaX / 8;
-    this.velocityY = deltaY / 8;
+    if ( Math.abs(deltaX) < 1) {
+      deltaX = 0;
+      this.x = this.destX;
+    }
 
-    var slope = deltaY / deltaX;
+    if ( Math.abs(deltaY) < 1) {
+      deltaY = 0;
+      this.y = this.destY;
+    }
+
+      //console.log(">>" + this.letter + "<< this.x: " + this.x + " this.y: " + this.y + " destX: " + this.destX + " (" + x + ") destY: " + this.destY + "(" + y + ")");
+
+    //divide by a smaller number to increase speed, the number must be the same for X and Y.
+    this.velocityX = Math.round( (deltaX / 5) * 10) / 10;
+    this.velocityY = Math.round( (deltaY / 5) * 10) / 10;
+
+    //console.log(">>" + this.letter + "<< new velX: " + this.velocityX + " new velY: " + this.velocityY + "\nFrom: deltaX: " + deltaX + " deltaY: " + deltaY);
   }
 }
 
@@ -338,8 +383,8 @@ function matchWord(word, x, y) {
   this.word = word + "";
   this.found = false;
 
-  this.draw = function () {
-    letters = this.word.split("");
+  this.draw = function() {
+    var letters = this.word.split("");
     ctx.beginPath();
     ctx.fillStyle = "white";
     ctx.strokeStyle = "black";
@@ -353,13 +398,29 @@ function matchWord(word, x, y) {
         ctx.stroke();
         ctx.fillStyle = "white";
       }
-
-
-
     }
-
   }
 
+  this.drawEndOfRound = function() {
+    var letters = this.word.split("");
+    ctx.beginPath();
+    ctx.strokeStyle = "black";
+
+    for (var i = 0; i < letters.length; i++) {
+      if (this.found) {
+        ctx.fillStyle = "white";
+      } else {
+        ctx.fillStyle = "yellow";
+      }
+      ctx.fillRect((i*15) + this.x, this.y, 11, 15);
+      ctx.strokeRect((i*15) + this.x, this.y, 11, 15);
+      ctx.font = "bold 14px Courier";
+      ctx.fillStyle = "black";
+      ctx.fillText(letters[i].toUpperCase(), (i*15) + 1 + this.x, this.y + 12);
+      ctx.stroke();
+      ctx.fillStyle = "white";
+    }
+  }
   this.setFound = function() {
     this.found = true;
   }
@@ -501,7 +562,6 @@ function handleHttpResponse() {
 
     for (var i = 0; i < solutionWords.length; i++) {
       msg += solutionWords[i][0] + ", ";
-      //console.log("word:" + solutionWords[i][0] + " letters: " + solutionWords[i][0].length);
       switch (solutionWords[i][0].length) {
         case 3:
             threeLetterWords ++;
@@ -523,10 +583,10 @@ function handleHttpResponse() {
     fivesHeight = fiveLetterWords;
 
     console.log("words to match (" + solutionWords.length + "):\n" + msg);
-    console.log("3: " + threeLetterWords);
-    console.log("4: " + fourLetterWords);
-    console.log("5: " + fiveLetterWords);
-    console.log("6: " + sixLetterWords);
+    //console.log("3: " + threeLetterWords);
+    //console.log("4: " + fourLetterWords);
+    //console.log("5: " + fiveLetterWords);
+    //console.log("6: " + sixLetterWords);
     if (solutionWords.length > 20) {
       console.log("overlap required");
       if (solutionWords.length - Math.floor(threeLetterWords / 2) <= 20) {
@@ -534,8 +594,7 @@ function handleHttpResponse() {
         threesToDouble = solutionWords.length - 20;
         threesHeight = threeLetterWords - threesToDouble;
         console.log("threes only! doubleup: " + threesToDouble + " 3s height: " + threesHeight);
-        console.log("rows to print: " + solutionWords.length - Math.floor(threeLetterWords / 2));
-
+        console.log((solutionWords.length - Math.floor(threeLetterWords / 2)));
       } else if (solutionWords.length - (Math.floor(threeLetterWords / 2)) - (Math.floor(fourLetterWords / 2)) <= 20) {
         //3's and 4's needed
         threesToDouble = Math.floor(threeLetterWords / 2);
@@ -567,23 +626,23 @@ function handleHttpResponse() {
     //matchWord(word, x, y)
     for (var i = 0; i < solutionWords.length; i++) {
       if (i < threeLetterWords) {
-        console.log("logging 3s");
+        //console.log("logging 3s");
         var x = 3 + ((Math.floor(i / (threesHeight)) * 15)* 4);
         var y = 3 + (((i % (threesHeight))) * 20);
         solutionWordObjects.push(new matchWord(solutionWords[i][0], x, y));
       } else if (i - threeLetterWords < fourLetterWords) {
-        console.log("logging 4s");
+        //console.log("logging 4s");
         var x = 3 + ((Math.floor((i- threeLetterWords)/ (foursHeight)) * 15)* 5);
         //var y = 3 + ((((i - threesToDouble) % (foursHeight + threesHeight) * 20);
         var y = 3 + ((((i - threeLetterWords) % foursHeight) + threesHeight) * 20);
         solutionWordObjects.push(new matchWord(solutionWords[i][0], x, y));
       } else if (i - threeLetterWords - fourLetterWords < fiveLetterWords) {
-        console.log("logging 5s");
+        //console.log("logging 5s");
         var x = 3 + ((Math.floor((i - threeLetterWords - fourLetterWords) / (fiveLetterWords - fivesToDouble)) * 15)* 6);
         var y = 3 + ((((i - threeLetterWords - fourLetterWords) % fivesHeight) + threesHeight + foursHeight) * 20);
         solutionWordObjects.push(new matchWord(solutionWords[i][0], x, y));
       } else {
-        console.log("logging 6s");
+        //console.log("logging 6s");
         var x = 3;
         var y = 3 + ((i - threesToDouble - foursToDouble - fivesToDouble) * 20);
         solutionWordObjects.push(new matchWord(solutionWords[i][0], x, y));
@@ -608,8 +667,14 @@ function handleHttpResponse() {
 var newRound = function() {
   window.removeEventListener("keydown", doKeyDown);
   clearInterval(interval);
+
+  for (var i = 0;i < solutionWordObjects.length; i++) {
+    solutionWordObjects[i].drawEndOfRound();
+  }
+
   foundSixLetterWord = false;
   time = TIME_LIMIT;
+  messageBoxText = null;
   //post new round message:
   splashMessage("New Round!");
   //getNewLetters();
@@ -620,6 +685,7 @@ var newRoundFoundAll = function() {
   clearInterval(interval);
   foundSixLetterWord = false;
   time = TIME_LIMIT;
+  messageBoxText = null;
   //post new round message:
   splashMessage("You found every word!\n Grats!");
 }
@@ -627,9 +693,15 @@ var newRoundFoundAll = function() {
 var gameOver = function() {
   window.removeEventListener("keydown", doKeyDown);
   clearInterval(interval);
+
+  for (var i = 0;i < solutionWordObjects.length; i++) {
+    solutionWordObjects[i].drawEndOfRound();
+  }
+
   score = 0;
   foundSixLetterWord = false;
   time = TIME_LIMIT;
+  messageBoxText = null;
   //post game over message:
   splashMessage("Game over!");
 }
@@ -693,19 +765,40 @@ var drawBG = function() {
   }
 }
 
+var drawMessageBox = function() {
+  if (messageBoxText == null) {
+    return;
+  } else {
+    //draw the outline
+    //ctx.lineWidth="4";
+    ctx.strokeStyle = "white";
+    ctx.strokeRect(275,260,200,125);
+
+    //write the text
+    ctx.font = "18px Arial";
+    ctx.fillStyle = "white";
+    //split the message into seperate lines (because canvas doesn't support new line character)
+    var messagetoWrite = messageBoxText.split("/")
+    for (var i = 0; i < messagetoWrite.length; i++) {
+      ctx.fillText(messagetoWrite[i],280,280 + (i*25));
+    }
+  }
+}
+
 var drawToFindBoxes = function() {
   //runs once for each word in the solution array
   for (var i = 0; i < solutionWords.length; i++) {
     //runs once for each letter in the solution word
     for (var j = 0; j < solutionWords[i][0].length; j++) {
       ctx.lineWidth="1";
-      //if this word has been found, write each letter...
+
 
       ctx.fillStyle = "white";
       ctx.fillRect((j*15) + 3, (i*20) + 3, 11, 15);
       ctx.strokeStyle = "black";
       ctx.strokeRect((j*15) + 3, (i*20) + 3, 11, 15);
 
+      //if this word has been found, write each letter...
       if (solutionWords[i][1] == true) {
         //ctx.strokeStyle = "red";
         var wordToPrint = solutionWords[i][0].split("");
